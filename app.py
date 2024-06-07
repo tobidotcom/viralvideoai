@@ -45,7 +45,7 @@ def main():
             # Save the audio file
             audio_file = Path("script_audio.mp3")
             with open(audio_file, "wb") as f:
-                f.write(audio_response.content)  # Use audio_response.content instead of audio_response.data
+                f.write(audio_response.content)
 
         # Update the progress bar
         progress_bar.progress(50)
@@ -63,6 +63,20 @@ def main():
                                                       stop=None,
                                                       temperature=0.7)
             image_prompts = response.choices[0].message.content.split("\n")
+
+            # If no image prompts were generated, try again with different parameters
+            if not image_prompts:
+                messages = [
+                    {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
+                    {"role": "user", "content": f"Here is the script: {script}. Please generate at least 5 image prompts for this viral video, each describing a specific scene or moment from the script."}
+                ]
+                response = client.chat.completions.create(model="gpt-3.5-turbo",
+                                                          messages=messages,
+                                                          max_tokens=500,
+                                                          n=1,
+                                                          stop=None,
+                                                          temperature=0.7)
+                image_prompts = response.choices[0].message.content.split("\n")
 
         # Update the progress bar
         progress_bar.progress(75)
