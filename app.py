@@ -42,7 +42,7 @@ if video_idea:
     # Save the audio file
     audio_file = Path("script_audio.mp3")
     with open(audio_file, "wb") as f:
-        f.write(audio_response.data)
+        f.write(audio_response.content)  # Use audio_response.content instead of audio_response.data
 
     # Load the audio file using moviepy
     audio_clip = mp.AudioFileClip(audio_file)
