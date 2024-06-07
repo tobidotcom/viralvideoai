@@ -1,106 +1,103 @@
 import streamlit as st
-from openai import OpenAI, BadRequestError
-import moviepy.editor as mp
-import io
-from dotenv import load_dotenv
-import os
+import openai
 from pathlib import Path
+import moviepy.editor as mp
 
-# Load environment variables from .env file
-load_dotenv()
+# Set up OpenAI API credentials
+openai.api_key = st.secrets["openai_api_key"]
+client = openai.Client()
 
-# Set up OpenAI API key from environment variable
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def main():
+    st.title("Viral Video Generator")
 
-# Streamlit app title
-st.title("Viral Video Generator with AI")
+    # Get user input for the video idea
+    video_idea = st.text_input("Enter your video idea:")
 
-# User input for video idea
-video_idea = st.text_input("Enter your video idea")
+    if st.button("Generate Viral Video"):
+        # Add a placeholder for the progress bar
+        progress_bar = st.progress(0)
 
-if video_idea:
-    try:
         # Generate viral video script using OpenAI Chat Completions API
-        messages = [
-            {"role": "system", "content": "You are an AI assistant that generates viral video scripts."},
-            {"role": "user", "content": f"Generate a viral video script about {video_idea}"}
-        ]
-        response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                                  messages=messages,
-                                                  max_tokens=500,
+        with st.spinner('Generating script...'):
+            messages = [
+                {"role": "system", "content": "You are an AI assistant that generates viral video scripts."},
+                {"role": "user", "content": f"Generate a viral video script about {video_idea}"}
+            ]
+            response = client.chat.completions.create(model="gpt-3.5-turbo",
+                                                      messages=messages,
+                                                      max_tokens=500,
+                                                      n=1,
+                                                      stop=None,
+                                                      temperature=0.7)
+            script = response.choices[0].message.content
+
+        # Update the progress bar
+        progress_bar.progress(25)
+
+        # Generate audio for the script using OpenAI Audio API
+        with st.spinner('Generating audio...'):
+            audio_response = client.audio.speech.create(
+                model="tts-1",
+                voice="alloy",
+                text=script
+            )
+
+            # Save the audio file
+            audio_file = Path("script_audio.mp3")
+            with open(audio_file, "wb") as f:
+                f.write(audio_response.data)
+
+        # Update the progress bar
+        progress_bar.progress(50)
+
+        # Generate image prompts from the script using OpenAI Chat Completions API
+        with st.spinner('Generating image prompts...'):
+            messages = [
+                {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
+                {"role": "user", "content": f"Here is the script: {script}. Please generate image prompts for this viral video."}
+            ]
+            response = client.chat.completions.create(model="gpt-3.5-turbo",
+                                                      messages=messages,
+                                                      max_tokens=200,
+                                                      n=1,
+                                                      stop=None,
+                                                      temperature=0.7)
+            image_prompts = response.choices[0].message.content.split("\n")
+
+        # Update the progress bar
+        progress_bar.progress(75)
+
+        # Generate images using OpenAI DALL-E API
+        with st.spinner('Generating images...'):
+            images = []
+            for prompt in image_prompts:
+                response = client.images.generate(prompt=prompt,
                                                   n=1,
-                                                  stop=None,
-                                                  temperature=0.7)
-        script = response.choices[0].message.content
-    except BadRequestError as e:
-        st.error(f"Your video idea '{video_idea}' was flagged by the safety system. Please try a different idea.")
-        st.error(e)
-        return  # Move the return statement inside the except block
+                                                  size="1024x1024")
+                image_url = response.data[0].url
+                images.append(image_url)
 
-    # Generate audio for the script using OpenAI Audio API
-    audio_response = client.audio.speech.create(
-        model="tts-1",
-        voice="alloy",
-        input=script
-    )
+        # Update the progress bar to 100%
+        progress_bar.progress(100)
 
-    # Save the audio file
-    audio_file = Path("script_audio.mp3")
-    with open(audio_file, "wb") as f:
-        f.write(audio_response.content)
+        # Create video from images and audio
+        clips = [mp.ImageClip(mp.utils.gif_tools.url_to_gif(image_url)).set_duration(2) for image_url in images]
+        final_clip = mp.concatenate_videoclips(clips)
+        final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
 
-    # Generate image prompts from the script using OpenAI Chat Completions API
-    messages = [
-        {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
-        {"role": "user", "content": f"Here is the script: {script}. Please generate image prompts for this viral video."}
-    ]
-    response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                              messages=messages,
-                                              max_tokens=200,
-                                              n=1,
-                                              stop=None,
-                                              temperature=0.7)
-    image_prompts = response.choices[0].message.content.split("\n")
+        # Save the video to a file
+        final_clip.write_videofile("viral_video.mp4")
 
-    # Check if image prompts were generated
-    if not image_prompts:
-        st.warning("No image prompts were generated for the given script.")
+        # Display the script, audio, and video
+        st.header("Viral Video Script")
+        st.write(script)
 
-    # Generate images using OpenAI DALL-E API
-    images = []
-    for prompt in image_prompts:
-        try:
-            response = client.images.generate(prompt=prompt,
-                                              n=1,
-                                              size="1024x1024")
-            image_url = response.data[0].url
-            images.append(image_url)
-        except BadRequestError as e:
-            st.warning(f"Skipping prompt due to safety system violation: {prompt}")
-            st.warning(e)
+        st.header("Audio")
+        st.audio(audio_file, format="audio/mp3")
 
-    # Display script and audio
-    st.subheader("Viral Video Script")
-    st.write(script)
-    st.audio(audio_file)
+        st.header("Video")
+        video_file = open("viral_video.mp4", "rb").read()
+        st.video(video_file)
 
-    st.subheader("Images for the Video")
-    for image_url in images:
-        st.image(image_url)
-
-    # Generate video from images
-    clips = [mp.ImageClip(mp.utils.gif_tools.url_to_gif(image_url)).set_duration(2) for image_url in images]
-    final_clip = mp.concatenate_videoclips(clips)
-
-    # Add audio to the video
-    final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
-
-    # Save video to buffer
-    video_buffer = io.BytesIO()
-    final_clip.write_videofile(video_buffer, codec="libx264")
-    video_bytes = video_buffer.getvalue()
-
-    # Display video
-    st.video(video_bytes)
-else:
-    st.warning("Please enter a video idea to get started.")
+if __name__ == "__main__":
+    main()
