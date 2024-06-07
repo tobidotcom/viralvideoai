@@ -1,8 +1,6 @@
-import streamlit as st
 import openai
 import moviepy.editor as mp
 import io
-import re
 from dotenv import load_dotenv
 import os
 from pathlib import Path
@@ -20,16 +18,20 @@ st.title("Viral Video Generator with AI")
 video_idea = st.text_input("Enter your video idea")
 
 if video_idea:
-    # Generate viral video script using OpenAI Completions API
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=f"Generate a viral video script about {video_idea}",
+    # Generate viral video script using OpenAI Chat Completions API
+    messages = [
+        {"role": "system", "content": "You are an AI assistant that generates viral video scripts."},
+        {"role": "user", "content": f"Generate a viral video script about {video_idea}"}
+    ]
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
         max_tokens=500,
         n=1,
         stop=None,
         temperature=0.7,
     )
-    script = response.choices[0].text
+    script = response.choices[0].message.content
 
     # Generate audio for the script using OpenAI Audio API
     audio = openai.Audio.create(
@@ -44,10 +46,11 @@ if video_idea:
     with open(audio_file, "wb") as f:
         f.write(audio.data)
 
-    # Generate image prompts from the script using OpenAI GPT-3.5 Turbo
-    messages = [{"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
-                {"role": "user", "content": f"Here is the script: {script}. Please generate image prompts for this viral video."}]
-
+    # Generate image prompts from the script using OpenAI Chat Completions API
+    messages = [
+        {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
+        {"role": "user", "content": f"Here is the script: {script}. Please generate image prompts for this viral video."}
+    ]
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
