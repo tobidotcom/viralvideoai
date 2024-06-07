@@ -36,7 +36,7 @@ if video_idea:
     audio_response = client.audio.speech.create(
         model="tts-1",
         voice="alloy",
-        prompt=script
+        input=script
     )
 
     # Save the audio file
@@ -44,48 +44,17 @@ if video_idea:
     with open(audio_file, "wb") as f:
         f.write(audio_response.data)
 
-    # Generate image prompts from the script using OpenAI Chat Completions API
-    messages = [
-        {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
-        {"role": "user", "content": f"Here is the script: {script}. Please generate image prompts for this viral video."}
-    ]
-    response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                              messages=messages,
-                                              max_tokens=200,
-                                              n=1,
-                                              stop=None,
-                                              temperature=0.7)
-    image_prompts = response.choices[0].message.content.split("\n")
+    # Load the audio file using moviepy
+    audio_clip = mp.AudioFileClip(audio_file)
 
-    # Generate images using OpenAI DALL-E API
-    images = []
-    for prompt in image_prompts:
-        response = client.images.generate(prompt=prompt,
-                                          n=1,
-                                          size="1024x1024")
-        image_url = response.data[0].url
-        images.append(image_url)
+    # Generate a blank video clip with the same duration as the audio
+    video_clip = mp.VideoClip(make_frame=lambda t: None, duration=audio_clip.duration)
 
-    # Display script and audio
-    st.subheader("Viral Video Script")
-    st.write(script)
-    st.audio(audio_file)
+    # Combine the audio and video clips
+    final_clip = video_clip.set_audio(audio_clip)
 
-    st.subheader("Images for the Video")
-    for image_url in images:
-        st.image(image_url)
+    # Write the final video clip to a file
+    final_clip.write_videofile("viral_video.mp4")
 
-    # Generate video from images
-    clips = [mp.ImageClip(mp.utils.gif_tools.url_to_gif(image_url)).set_duration(2) for image_url in images]
-    final_clip = mp.concatenate_videoclips(clips)
-
-    # Add audio to the video
-    final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
-
-    # Save video to buffer
-    video_buffer = io.BytesIO()
-    final_clip.write_videofile(video_buffer, codec="libx264")
-    video_bytes = video_buffer.getvalue()
-
-    # Display video
-    st.video(video_bytes)
+    # Display the video in Streamlit
+    st.video("viral_video.mp4")
