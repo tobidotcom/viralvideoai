@@ -33,7 +33,7 @@ if video_idea:
     script = response.choices[0].message.content
 
     # Generate audio for the script using OpenAI Audio API
-    audio = client.audio.create(model="tts-1", voice="alloy", input=script, output_format="mp3")
+    audio = client.audio.transcribe(model="tts-1", voice="alloy", input=script, output_format="mp3")
 
     # Save the audio file
     audio_file = Path("script_audio.mp3")
@@ -85,4 +85,3 @@ if video_idea:
 
     # Display video
     st.video(video_bytes)
-
