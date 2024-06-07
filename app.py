@@ -2,7 +2,7 @@ import streamlit as st
 import openai
 from pathlib import Path
 import moviepy.editor as mp
-from moviepy.tools import gif_tools
+from urllib.request import urlopen
 
 # Set up OpenAI API credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -82,7 +82,7 @@ def main():
         progress_bar.progress(100)
 
         # Create video from images and audio
-        clips = [mp.ImageClip(gif_tools.url_to_gif(image_url)).set_duration(2) for image_url in images]
+        clips = [mp.ImageClip(urlopen(image_url)).set_duration(2) for image_url in images]
         final_clip = mp.concatenate_videoclips(clips)
         final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
 
