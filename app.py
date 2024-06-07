@@ -5,6 +5,7 @@ import io
 import re
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,7 +22,7 @@ video_idea = st.text_input("Enter your video idea")
 if video_idea:
     # Generate viral video script using OpenAI Completions API
     response = openai.Completion.create(
-        engine="text-davinci-003",
+        model="text-davinci-003",
         prompt=f"Generate a viral video script about {video_idea}",
         max_tokens=500,
         n=1,
@@ -29,6 +30,19 @@ if video_idea:
         temperature=0.7,
     )
     script = response.choices[0].text
+
+    # Generate audio for the script using OpenAI Audio API
+    audio = openai.Audio.create(
+        model="tts-1",  # The text-to-speech model to use
+        voice="alloy",  # The voice to use for the audio
+        input=script,  # The text to convert to speech
+        output_format="mp3"  # The output format for the audio file
+    )
+
+    # Save the audio file
+    audio_file = Path("script_audio.mp3")
+    with open(audio_file, "wb") as f:
+        f.write(audio.data)
 
     # Generate image prompts from the script using OpenAI GPT-3.5 Turbo
     messages = [{"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
@@ -55,9 +69,10 @@ if video_idea:
         image_url = response["data"][0]["url"]
         images.append(image_url)
 
-    # Display script and images
+    # Display script and audio
     st.subheader("Viral Video Script")
     st.write(script)
+    st.audio(audio_file)
 
     st.subheader("Images for the Video")
     for image_url in images:
@@ -67,9 +82,12 @@ if video_idea:
     clips = [mp.ImageClip(mp.utils.gif_tools.url_to_gif(image_url)).set_duration(2) for image_url in images]
     final_clip = mp.concatenate_videoclips(clips)
 
+    # Add audio to the video
+    final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
+
     # Save video to buffer
     video_buffer = io.BytesIO()
-    final_clip.write_videofile(video_buffer, codec="libx264", audio=False)
+    final_clip.write_videofile(video_buffer, codec="libx264")
     video_bytes = video_buffer.getvalue()
 
     # Display video
