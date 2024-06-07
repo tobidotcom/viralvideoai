@@ -28,26 +28,59 @@ video_styles = {
     "Vaporwave": "vaporwave aesthetic, glitch art, retro color palettes, Japanese influences, nostalgic and futuristic"
 }
 
+# Define available languages and their corresponding voice IDs
+languages = {
+    "English": "onyx",
+    "German": "onyx",
+    "French": "onyx",
+    "Spanish": "onyx",
+    "Italian": "onyx"
+}
+
 def main():
     st.title("Viral Video Generator")
 
+    # Get user input for the video type
+    video_type = st.selectbox("Select Video Type", ["Story", "Informational", "Promotional", "Educational"])
+
     # Get user input for the video idea
-    video_idea = st.text_input("Enter your video idea:")
+    video_idea = st.text_input(f"Enter your {video_type.lower()} video idea:")
 
     # Select video style
     selected_style = st.selectbox("Choose a Video Style", list(video_styles.keys()))
     style_description = video_styles[selected_style]
 
+    # Select language
+    selected_language = st.selectbox("Choose a Language", list(languages.keys()))
+    voice_id = languages[selected_language]
+
     if st.button("Generate Viral Video"):
         # Add a placeholder for the progress bar
         progress_bar = st.progress(0)
 
-        # Generate captivating spoken stories using OpenAI Chat Completions API
-        with st.spinner('Weaving your tale...'):
-            messages = [
-                {"role": "system", "content": "You are an AI assistant that crafts amazing and captivating stories for spoken word performances. Your stories should be rich in imagery, emotion, and depth, with relatable characters and a compelling arc that can deeply engage an audience."},
-                {"role": "user", "content": f"Create an amazing story that touches the heart, with vivid descriptions and a powerful message, about {video_idea}"}
-            ]
+        # Generate content based on the selected video type
+        with st.spinner(f'Generating {video_type.lower()} content...'):
+            if video_type == "Story":
+                messages = [
+                    {"role": "system", "content": f"You are an AI assistant that crafts amazing and captivating stories for spoken word performances in {selected_language}. Your stories should be rich in imagery, emotion, and depth, with relatable characters and a compelling arc that can deeply engage an audience."},
+                    {"role": "user", "content": f"Create an amazing story that touches the heart, with vivid descriptions and a powerful message, about {video_idea}"}
+                ]
+            elif video_type == "Informational":
+                messages = [
+                    {"role": "system", "content": f"You are an AI assistant that creates informative and educational content for video presentations in {selected_language}. Your content should be factual, well-researched, and presented in a clear and engaging manner."},
+                    {"role": "user", "content": f"Create an informative and engaging video script that provides detailed information about {video_idea}"}
+                ]
+            elif video_type == "Promotional":
+                messages = [
+                    {"role": "system", "content": f"You are an AI assistant that generates persuasive and compelling promotional content for video marketing in {selected_language}. Your content should highlight the key features and benefits of the product or service, while also creating a sense of excitement and desire in the viewer."},
+                    {"role": "user", "content": f"Create a promotional video script that effectively markets and promotes {video_idea}"}
+                ]
+            else:  # Educational
+                messages = [
+                    {"role": "system", "content": f"You are an AI assistant that develops educational and instructional content for video tutorials in {selected_language}. Your content should be easy to understand, well-structured, and designed to effectively teach and explain complex concepts or processes."},
+                    {"role": "user", "content": f"Create an educational video script that teaches and explains {video_idea} in a clear and engaging manner"}
+                ]
+
             response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
@@ -65,7 +98,7 @@ def main():
         with st.spinner('Generating audio...'):
             audio_response = client.audio.speech.create(
                 model="tts-1",
-                voice="alloy",
+                voice=voice_id,
                 input=script
             )
 
@@ -123,7 +156,7 @@ def main():
         final_clip.write_videofile(str(video_file), codec="libx264")
 
         # Display the script, audio, and video
-        st.header("Viral Video Script")
+        st.header(f"{video_type} Video Script ({selected_language})")
         st.write(script)
 
         st.header("Audio")
