@@ -81,12 +81,12 @@ def main():
         progress_bar.progress(100)
 
         # Create video from images and audio
-        clips = [mp.ImageClip(mp.utils.gif_tools.url_to_gif(image_url)).set_duration(2) for image_url in images]
+        clips = [mp.ImageClip(mp.utils.url_to_image(image_url)).set_duration(2) for image_url in images]
         final_clip = mp.concatenate_videoclips(clips)
         final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
 
-        # Save the video to a file
-        final_clip.write_videofile("viral_video.mp4")
+        # Save the video to an MP4 file
+        final_clip.write_videofile("viral_video.mp4", codec="libx264")
 
         # Display the script, audio, and video
         st.header("Viral Video Script")
