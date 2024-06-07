@@ -4,7 +4,7 @@ from pathlib import Path
 import moviepy.editor as mp
 
 # Set up OpenAI API credentials
-openai.api_key = st.secrets["OPENAI_API_KEY]
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 client = openai.Client()
 
 def main():
