@@ -42,14 +42,17 @@ def main():
         # Add a placeholder for the progress bar
         progress_bar = st.progress(0)
 
-  
+
+
             # Generate captivating spoken stories using OpenAI Chat Completions API
-            with st.spinner('Weaving your tale...'):
-                messages = [
-                    {"role": "system", "content": "You are an AI assistant that crafts amazing and captivating stories for spoken word performances. Your stories should be rich in imagery, emotion, and depth, with relatable characters and a compelling arc that can deeply engage an audience."},
-                    {"role": "user", "content": f"Create an amazing story that touches the heart, with vivid descriptions and a powerful message, about {story_idea}"}
-                ]
-            ]
+with st.spinner('Weaving your tale...'):
+    messages = [
+        {"role": "system", "content": "You are an AI assistant that crafts amazing and captivating stories for spoken word performances. Your stories should be rich in imagery, emotion, and depth, with relatable characters and a compelling arc that can deeply engage an audience."},
+        {"role": "user", "content": f"Create an amazing story that touches the heart, with vivid descriptions and a powerful message, about {story_idea}"}
+    ]
+
+
+        
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=messages,
