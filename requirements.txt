@@ -3,3 +3,4 @@ openai
 moviepy
 python-dotenv
 pysrt
+replicate
