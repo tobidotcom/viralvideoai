@@ -35,7 +35,7 @@ if video_idea:
     except BadRequestError as e:
         st.error(f"Your video idea '{video_idea}' was flagged by the safety system. Please try a different idea.")
         st.error(e)
-        return
+        return  # Move the return statement inside the except block
 
     # Generate audio for the script using OpenAI Audio API
     audio_response = client.audio.speech.create(
