@@ -1,7 +1,5 @@
 import streamlit as st
 from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 import moviepy.editor as mp
 import io
 from dotenv import load_dotenv
@@ -12,6 +10,7 @@ from pathlib import Path
 load_dotenv()
 
 # Set up OpenAI API key from environment variable
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Streamlit app title
 st.title("Viral Video Generator with AI")
@@ -26,18 +25,15 @@ if video_idea:
         {"role": "user", "content": f"Generate a viral video script about {video_idea}"}
     ]
     response = client.chat.completions.create(model="gpt-3.5-turbo",
-    messages=messages,
-    max_tokens=500,
-    n=1,
-    stop=None,
-    temperature=0.7)
+                                              messages=messages,
+                                              max_tokens=500,
+                                              n=1,
+                                              stop=None,
+                                              temperature=0.7)
     script = response.choices[0].message.content
 
     # Generate audio for the script using OpenAI Audio API
-    audio = client.audio.create(model="tts-1",  # The text-to-speech model to use
-    voice="alloy",  # The voice to use for the audio
-    input=script,  # The text to convert to speech
-    output_format="mp3"  # The output format for the audio file)
+    audio = client.audio.create(model="tts-1", voice="alloy", input=script, output_format="mp3")
 
     # Save the audio file
     audio_file = Path("script_audio.mp3")
@@ -50,19 +46,19 @@ if video_idea:
         {"role": "user", "content": f"Here is the script: {script}. Please generate image prompts for this viral video."}
     ]
     response = client.chat.completions.create(model="gpt-3.5-turbo",
-    messages=messages,
-    max_tokens=200,
-    n=1,
-    stop=None,
-    temperature=0.7)
+                                              messages=messages,
+                                              max_tokens=200,
+                                              n=1,
+                                              stop=None,
+                                              temperature=0.7)
     image_prompts = response.choices[0].message.content.split("\n")
 
     # Generate images using OpenAI DALL-E API
     images = []
     for prompt in image_prompts:
         response = client.images.generate(prompt=prompt,
-        n=1,
-        size="1024x1024")
+                                          n=1,
+                                          size="1024x1024")
         image_url = response.data[0].url
         images.append(image_url)
 
@@ -89,3 +85,4 @@ if video_idea:
 
     # Display video
     st.video(video_bytes)
+
