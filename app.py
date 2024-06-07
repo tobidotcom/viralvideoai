@@ -49,7 +49,7 @@ def main():
                 {"role": "user", "content": f"Create an amazing story that touches the heart, with vivid descriptions and a powerful message, about {video_idea}"}
             ]
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",
                 messages=messages,
                 max_tokens=500,
                 n=1,
@@ -84,7 +84,7 @@ def main():
                 {"role": "user", "content": f"The video script is as follows: {script}. Based on this script, create 20 detailed image prompts that capture the essence of the video's narrative. Each prompt should be in the '{selected_style}' style, which is characterized by {style_description}. The image prompts should be cohesive and maintain a consistent visual theme throughout, ensuring that the final video has a unified and professional look."}
             ]
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",
                 messages=messages,
                 max_tokens=500,
                 n=1,
