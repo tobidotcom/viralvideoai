@@ -91,7 +91,7 @@ def main():
         # Generate images using Replicate's Stable Diffusion API
         with st.spinner('Generating images...'):
             images = []
-            replicate.set_auth_token(st.secrets["REPLICATE_API_TOKEN"])
+            replicate.auth.set_auth_token(st.secrets["REPLICATE_API_TOKEN"])
             for prompt in image_prompts:
                 output = replicate.run(
                     "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf",
