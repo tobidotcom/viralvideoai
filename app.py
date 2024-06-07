@@ -54,29 +54,15 @@ def main():
         with st.spinner('Generating image prompts...'):
             messages = [
                 {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
-                {"role": "user", "content": f"Here is the script: {script}. Please generate image prompts for this viral video."}
+                {"role": "user", "content": f"Here is the script: {script}. Please generate at least 5 image prompts for this viral video, each describing a specific scene or moment from the script."}
             ]
             response = client.chat.completions.create(model="gpt-3.5-turbo",
                                                       messages=messages,
-                                                      max_tokens=200,
+                                                      max_tokens=500,
                                                       n=1,
                                                       stop=None,
                                                       temperature=0.7)
-            image_prompts = response.choices[0].message.content.split("\n")
-
-            # If no image prompts were generated, try again with different parameters
-            if not image_prompts:
-                messages = [
-                    {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
-                    {"role": "user", "content": f"Here is the script: {script}. Please generate at least 5 image prompts for this viral video, each describing a specific scene or moment from the script."}
-                ]
-                response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                                          messages=messages,
-                                                          max_tokens=500,
-                                                          n=1,
-                                                          stop=None,
-                                                          temperature=0.7)
-                image_prompts = response.choices[0].message.content.split("\n")
+            image_prompts = [prompt.strip() for prompt in response.choices[0].message.content.split("\n") if prompt.strip()]
 
         # Update the progress bar
         progress_bar.progress(75)
