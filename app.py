@@ -113,19 +113,6 @@ def main():
         final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
         final_clip.fps = 24
 
-        # Generate subtitles using TextClip
-        subtitle_clips = []
-        start_time = 0
-        for line in script.split('\n'):
-            end_time = start_time + len(line.split()) / 10  # Adjust the duration based on the number of words
-            subtitle_clip = mp.TextClip(line, fontsize=24, color='white', bg_color='black', font='Arial')
-            subtitle_clip = subtitle_clip.set_start(start_time).set_duration(end_time - start_time)
-            subtitle_clips.append(subtitle_clip)
-            start_time = end_time
-
-        # Combine subtitles with the video
-        final_clip = mp.CompositeVideoClip([final_clip] + subtitle_clips)
-
         # Save the video to an MP4 file
         video_file = Path("viral_video.mp4")
         final_clip.write_videofile(str(video_file), codec="libx264")
