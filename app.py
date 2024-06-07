@@ -7,10 +7,14 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import time
+import replicate
 
 # Set up OpenAI API credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 client = openai.Client()
+
+# Set up Replicate API token
+replicate.set_auth_token(st.secrets["REPLICATE_API_TOKEN"])
 
 # Define video styles
 video_styles = {
@@ -88,18 +92,15 @@ def main():
         # Update the progress bar
         progress_bar.progress(75)
 
-        # Generate images using OpenAI DALL-E API
+        # Generate images using Replicate's Stable Diffusion API
         with st.spinner('Generating images...'):
             images = []
-            for i, prompt in enumerate(image_prompts):
-                # Introduce a delay to avoid rate limiting
-                if i > 0 and i % 5 == 0:
-                    time.sleep(60)  # Wait for 1 minute
-
-                response = client.images.generate(prompt=prompt,
-                                                  n=1,
-                                                  size="1024x1024")
-                image_url = response.data[0].url
+            for prompt in image_prompts:
+                output = replicate.run(
+                    "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf",
+                    input={"prompt": prompt}
+                )
+                image_url = output[0]
                 image_data = urlopen(image_url).read()
                 image = Image.open(BytesIO(image_data))
                 images.append(np.array(image))
