@@ -39,7 +39,7 @@ def main():
             audio_response = client.audio.speech.create(
                 model="tts-1",
                 voice="alloy",
-                text=script
+                input=script  # Pass the text as 'input' instead of 'text'
             )
 
             # Save the audio file
