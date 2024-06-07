@@ -7,6 +7,7 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import time
+import pysrt
 
 # Set up OpenAI API credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -112,6 +113,17 @@ def main():
         final_clip = mp.concatenate_videoclips(clips)
         final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
         final_clip.fps = 24
+
+        # Generate subtitles using pysrt
+        subs = pysrt.SubRipFile()
+        start_time = 0
+        for line in script.split('\n'):
+            end_time = start_time + len(line.split()) / 10  # Adjust the duration based on the number of words
+            subs.append(pysrt.SubRipItem(start_time, end_time, line))
+            start_time = end_time
+
+        # Add subtitles to the video
+        final_clip = final_clip.set_subtitles(subs)
 
         # Save the video to an MP4 file
         video_file = Path("viral_video.mp4")
