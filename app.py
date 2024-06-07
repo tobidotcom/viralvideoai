@@ -6,15 +6,11 @@ from urllib.request import urlopen
 from io import BytesIO
 from PIL import Image
 import numpy as np
-import time
 import replicate
 
 # Set up OpenAI API credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 client = openai.Client()
-
-# Set up Replicate API token
-replicate.set_auth_token(st.secrets["REPLICATE_API_TOKEN"])
 
 # Define video styles
 video_styles = {
@@ -95,6 +91,7 @@ def main():
         # Generate images using Replicate's Stable Diffusion API
         with st.spinner('Generating images...'):
             images = []
+            replicate.set_auth_token(st.secrets["REPLICATE_API_TOKEN"])
             for prompt in image_prompts:
                 output = replicate.run(
                     "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf",
