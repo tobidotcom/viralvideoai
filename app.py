@@ -33,12 +33,17 @@ if video_idea:
     script = response.choices[0].message.content
 
     # Generate audio for the script using OpenAI Audio API
-    audio = client.audio.transcribe(model="tts-1", voice="alloy", input=script, output_format="mp3")
+    audio_response = client.audio.speech.create(
+        model="tts-1",
+        voice="alloy",
+        input=script,
+        output_format="mp3"
+    )
 
     # Save the audio file
     audio_file = Path("script_audio.mp3")
     with open(audio_file, "wb") as f:
-        f.write(audio.data)
+        f.write(audio_response.data)
 
     # Generate image prompts from the script using OpenAI Chat Completions API
     messages = [
