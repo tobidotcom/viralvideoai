@@ -32,7 +32,7 @@ def generate_video(prompts, num_frames=1200, enhance=True, image_guidance=3.0, m
                 "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
                 input={"prompt": prompt}
             )
-            video_urls.extend(output)
+            video_urls.append(output[0])
 
     return video_urls
 
@@ -175,13 +175,12 @@ def main():
         progress_bar.progress(100)
 
         if model_type == "Text-to-Video":
-            images = []
+            clips = []
             for url in video_urls:
-                image_data = urlopen(url).read()
-                image = Image.open(BytesIO(image_data))
-                images.append(np.array(image))
+                video_data = urlopen(url).read()
+                clip = mp.VideoFileClip(BytesIO(video_data))
+                clips.append(clip)
 
-            clips = [mp.ImageClip(image).set_duration(2) for image in images]
             final_clip = mp.concatenate_videoclips(clips)
             final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
             final_clip.fps = 24
@@ -210,3 +209,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
