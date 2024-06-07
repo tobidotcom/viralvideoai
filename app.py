@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+from openai import OpenAI, BadRequestError
 import moviepy.editor as mp
 import io
 from dotenv import load_dotenv
@@ -19,18 +19,23 @@ st.title("Viral Video Generator with AI")
 video_idea = st.text_input("Enter your video idea")
 
 if video_idea:
-    # Generate viral video script using OpenAI Chat Completions API
-    messages = [
-        {"role": "system", "content": "You are an AI assistant that generates viral video scripts."},
-        {"role": "user", "content": f"Generate a viral video script about {video_idea}"}
-    ]
-    response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                              messages=messages,
-                                              max_tokens=500,
-                                              n=1,
-                                              stop=None,
-                                              temperature=0.7)
-    script = response.choices[0].message.content
+    try:
+        # Generate viral video script using OpenAI Chat Completions API
+        messages = [
+            {"role": "system", "content": "You are an AI assistant that generates viral video scripts."},
+            {"role": "user", "content": f"Generate a viral video script about {video_idea}"}
+        ]
+        response = client.chat.completions.create(model="gpt-3.5-turbo",
+                                                  messages=messages,
+                                                  max_tokens=500,
+                                                  n=1,
+                                                  stop=None,
+                                                  temperature=0.7)
+        script = response.choices[0].message.content
+    except BadRequestError as e:
+        st.error(f"Your video idea '{video_idea}' was flagged by the safety system. Please try a different idea.")
+        st.error(e)
+        return
 
     # Generate audio for the script using OpenAI Audio API
     audio_response = client.audio.speech.create(
@@ -57,14 +62,22 @@ if video_idea:
                                               temperature=0.7)
     image_prompts = response.choices[0].message.content.split("\n")
 
+    # Check if image prompts were generated
+    if not image_prompts:
+        st.warning("No image prompts were generated for the given script.")
+
     # Generate images using OpenAI DALL-E API
     images = []
     for prompt in image_prompts:
-        response = client.images.generate(prompt=prompt,
-                                          n=1,
-                                          size="1024x1024")
-        image_url = response.data[0].url
-        images.append(image_url)
+        try:
+            response = client.images.generate(prompt=prompt,
+                                              n=1,
+                                              size="1024x1024")
+            image_url = response.data[0].url
+            images.append(image_url)
+        except BadRequestError as e:
+            st.warning(f"Skipping prompt due to safety system violation: {prompt}")
+            st.warning(e)
 
     # Display script and audio
     st.subheader("Viral Video Script")
@@ -89,3 +102,5 @@ if video_idea:
 
     # Display video
     st.video(video_bytes)
+else:
+    st.warning("Please enter a video idea to get started.")
