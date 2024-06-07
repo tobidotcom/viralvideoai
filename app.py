@@ -9,36 +9,44 @@ import numpy as np
 import replicate
 import os
 
-# Set up OpenAI API credentials
-openai.api_key = st.secrets["OPENAI_API_KEY"]
-client = openai.Client()
-
-# Set the Replicate API token
-os.environ["REPLICATE_API_TOKEN"] = st.secrets["REPLICATE_API_TOKEN"]
-
-# Define video styles
-video_styles = {
-    "Realistic": "photorealistic, highly detailed, natural lighting, true-to-life textures",
-    "Cartoon": "cartoon style, vibrant and saturated colors, exaggerated features, flat shading, bold outlines",
-    "Vintage": "vintage aesthetic, warm sepia or desaturated tones, aged textures, film grain, nostalgic feel",
-    "Minimalist": "minimalist design, flat colors, simple shapes, clean lines, negative space",
-    "Cyberpunk": "cyberpunk aesthetic, neon lights, futuristic technology, gritty urban environments, high contrast",
-    "Surreal": "surreal and dreamlike, distorted reality, impossible scenarios, melting objects, mind-bending visuals",
-    "Steampunk": "steampunk style, Victorian-era inspired, brass and wood textures, intricate machinery, retro-futuristic",
-    "Vaporwave": "vaporwave aesthetic, glitch art, retro color palettes, Japanese influences, nostalgic and futuristic"
-}
-
-# Define available languages and their corresponding voice IDs
-languages = {
-    "English": "onyx",
-    "German": "onyx",
-    "French": "onyx",
-    "Spanish": "onyx",
-    "Italian": "onyx"
-}
-
 def main():
     st.title("Viral Video Generator")
+
+    # Get user input for OpenAI API key
+    openai_api_key = st.text_input("Enter your OpenAI API Key", type="password")
+
+    # Check if the user has provided an API key
+    if not openai_api_key:
+        st.error("Please enter your OpenAI API key.")
+        return
+
+    # Set up OpenAI API credentials
+    openai.api_key = openai_api_key
+    client = openai.Client()
+
+    # Set the Replicate API token
+    os.environ["REPLICATE_API_TOKEN"] = st.secrets["REPLICATE_API_TOKEN"]
+
+    # Define video styles
+    video_styles = {
+        "Realistic": "photorealistic, highly detailed, natural lighting, true-to-life textures",
+        "Cartoon": "cartoon style, vibrant and saturated colors, exaggerated features, flat shading, bold outlines",
+        "Vintage": "vintage aesthetic, warm sepia or desaturated tones, aged textures, film grain, nostalgic feel",
+        "Minimalist": "minimalist design, flat colors, simple shapes, clean lines, negative space",
+        "Cyberpunk": "cyberpunk aesthetic, neon lights, futuristic technology, gritty urban environments, high contrast",
+        "Surreal": "surreal and dreamlike, distorted reality, impossible scenarios, melting objects, mind-bending visuals",
+        "Steampunk": "steampunk style, Victorian-era inspired, brass and wood textures, intricate machinery, retro-futuristic",
+        "Vaporwave": "vaporwave aesthetic, glitch art, retro color palettes, Japanese influences, nostalgic and futuristic"
+    }
+
+    # Define available languages and their corresponding voice IDs
+    languages = {
+        "English": "onyx",
+        "German": "onyx",
+        "French": "onyx",
+        "Spanish": "onyx",
+        "Italian": "onyx"
+    }
 
     # Get user input for the video type
     video_type = st.selectbox("Select Video Type", ["Story", "Informational", "Promotional", "Educational"])
