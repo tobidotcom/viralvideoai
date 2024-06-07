@@ -36,8 +36,7 @@ if video_idea:
     audio_response = client.audio.speech.create(
         model="tts-1",
         voice="alloy",
-        input=script,
-        output_format="mp3"
+        text=script
     )
 
     # Save the audio file
