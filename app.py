@@ -1,6 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 import moviepy.editor as mp
+import numpy as np
 import io
 from dotenv import load_dotenv
 import os
@@ -45,10 +46,13 @@ if video_idea:
         f.write(audio_response.content)
 
     # Load the audio file using moviepy
-    audio_clip = mp.AudioFileClip(str(audio_file))  # Convert PosixPath to string
+    audio_clip = mp.AudioFileClip(str(audio_file))
 
     # Generate a blank video clip with the same duration as the audio
-    video_clip = mp.VideoClip(make_frame=lambda t: None, duration=audio_clip.duration)
+    def make_frame(t):
+        return np.zeros((720, 1280, 3), dtype=np.uint8)  # Replace with desired resolution and color
+
+    video_clip = mp.VideoClip(make_frame=make_frame, duration=audio_clip.duration)
 
     # Combine the audio and video clips
     final_clip = video_clip.set_audio(audio_clip)
