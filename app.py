@@ -91,6 +91,9 @@ def main():
         final_clip = mp.concatenate_videoclips(clips)
         final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
 
+        # Set the fps attribute on the final VideoClip object
+        final_clip.fps = 24
+
         # Save the video to an MP4 file
         final_clip.write_videofile("viral_video.mp4", codec="libx264")
 
