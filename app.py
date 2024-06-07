@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import openai
 from pathlib import Path
@@ -7,7 +8,33 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import replicate
-import os
+
+def generate_video(prompts, num_frames=1200, enhance=True, image_guidance=3.0, model_type="text-to-video"):
+    video_urls = []
+    if model_type == "text-to-video":
+        for prompt in prompts:
+            input = {
+                "prompt": prompt,
+                "enhance": enhance,
+                "num_frames": num_frames // len(prompts),
+                "image_guidance": image_guidance
+            }
+
+            output = replicate.run(
+                "camenduru/streaming-t2v:1fe245aad4bb7f209074a231142ac3eceb3b1f2adc9cf77b46e8ffa2662323cf",
+                input=input
+            )
+
+            video_urls.extend(output)
+    else:  # text-to-image
+        for prompt in prompts:
+            output = replicate.run(
+                "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
+                input={"prompt": prompt}
+            )
+            video_urls.extend(output)
+
+    return video_urls
 
 def main():
     st.title("Viral Video Generator")
@@ -61,6 +88,9 @@ def main():
     # Select language
     selected_language = st.selectbox("Choose a Language", list(languages.keys()))
     voice_id = languages[selected_language]
+
+    # Select Replicate model
+    model_type = st.selectbox("Select Replicate Model", ["Text-to-Video", "Text-to-Image"])
 
     if st.button("Generate Viral Video"):
         # Add a placeholder for the progress bar
@@ -137,33 +167,39 @@ def main():
         # Update the progress bar
         progress_bar.progress(75)
 
-        # Generate images using Replicate's SDXL-Lightning API
-        with st.spinner('Generating images...'):
-            images = []
-            for prompt in image_prompts:
-                output = replicate.run(
-                    "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
-                    input={"prompt": prompt}
-                )
-                image_url = output[0]
-                image_data = urlopen(image_url).read()
-                image = Image.open(BytesIO(image_data))
-                images.append(np.array(image))
+        # Generate video using the selected Replicate model
+        with st.spinner('Generating video...'):
+            video_urls = generate_video(image_prompts, num_frames=1200, enhance=True, image_guidance=3.0, model_type=model_type.lower().replace("-", ""))
 
         # Update the progress bar to 100%
         progress_bar.progress(100)
 
-        # Create video from images and audio
-        clips = [mp.ImageClip(image).set_duration(2) for image in images]
-        final_clip = mp.concatenate_videoclips(clips)
-        final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
-        final_clip.fps = 24
+        if model_type == "Text-to-Video":
+            images = []
+            for url in video_urls:
+                image_data = urlopen(url).read()
+                image = Image.open(BytesIO(image_data))
+                images.append(np.array(image))
 
-        # Save the video to an MP4 file
-        video_file = Path("viral_video.mp4")
-        final_clip.write_videofile(str(video_file), codec="libx264")
+            clips = [mp.ImageClip(image).set_duration(2) for image in images]
+            final_clip = mp.concatenate_videoclips(clips)
+            final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
+            final_clip.fps = 24
 
-        # Display the script, audio, and video
+            video_file = Path("viral_video.mp4")
+            final_clip.write_videofile(str(video_file), codec="libx264")
+
+            with video_file.open("rb") as f:
+                video_bytes = f.read()
+
+            st.video(video_bytes)
+        else:  # Text-to-Image
+            for url in video_urls:
+                image_data = urlopen(url).read()
+                image = Image.open(BytesIO(image_data))
+                st.image(image, caption="Generated Image", use_column_width=True)
+
+        # Display the script and audio
         st.header(f"{video_type} Video Script ({selected_language})")
         st.write(script)
 
@@ -171,11 +207,6 @@ def main():
         with audio_file.open("rb") as f:
             audio_bytes = f.read()
         st.audio(audio_bytes, format="audio/mp3")
-
-        st.header("Video")
-        with video_file.open("rb") as f:
-            video_bytes = f.read()
-        st.video(video_bytes)
 
 if __name__ == "__main__":
     main()
