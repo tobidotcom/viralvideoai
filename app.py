@@ -7,9 +7,6 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import time
-import pysrt
-from moviepy.editor import TextClip, CompositeVideoClip
-from moviepy.video.tools.subtitles import SubtitlesClip
 
 # Set up OpenAI API credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -116,22 +113,18 @@ def main():
         final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
         final_clip.fps = 24
 
-        # Generate subtitles using pysrt and TextClip
-        subs = pysrt.SubRipFile()
+        # Generate subtitles using TextClip
+        subtitle_clips = []
         start_time = 0
         for line in script.split('\n'):
             end_time = start_time + len(line.split()) / 10  # Adjust the duration based on the number of words
-            start_time_str = pysrt.SubRipTime.coerce(start_time).to_string()
-            end_time_str = pysrt.SubRipTime.coerce(end_time).to_string()
-            subs.append(pysrt.SubRipItem(start_time_str, end_time_str, line))
+            subtitle_clip = mp.TextClip(line, fontsize=24, color='white', bg_color='black', font='Arial')
+            subtitle_clip = subtitle_clip.set_start(start_time).set_duration(end_time - start_time)
+            subtitle_clips.append(subtitle_clip)
             start_time = end_time
 
-        # Load the Google Font
-        font = "Roboto-Regular.ttf"  # Replace with the desired Google Font file name
-        subtitles_clip = SubtitlesClip(subs, font)
-
-        # Add subtitles to the video
-        final_clip = CompositeVideoClip([final_clip, subtitles_clip])
+        # Combine subtitles with the video
+        final_clip = mp.CompositeVideoClip([final_clip] + subtitle_clips)
 
         # Save the video to an MP4 file
         video_file = Path("viral_video.mp4")
