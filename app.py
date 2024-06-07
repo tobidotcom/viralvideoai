@@ -96,18 +96,18 @@ def main():
         # Update the progress bar
         progress_bar.progress(75)
 
-        # Generate images using Replicate's Stable Diffusion API
-        with st.spinner('Generating images...'):
-            images = []
-            for prompt in image_prompts:
-                output = replicate.run(
-                    "stability-ai/stable-diffusion",
-                    input={"prompt": prompt}
-                )
-                image_url = output[0]
-                image_data = urlopen(image_url).read()
-                image = Image.open(BytesIO(image_data))
-                images.append(np.array(image))
+       def generate_images(image_prompts):
+    images = []
+    for prompt in image_prompts:
+        output = replicate.run(
+            "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
+            input={"prompt": prompt}
+        )
+        image_url = output[0]
+        image_data = urlopen(image_url).read()
+        image = Image.open(BytesIO(image_data))
+        images.append(np.array(image))
+    return images
 
         # Update the progress bar to 100%
         progress_bar.progress(100)
