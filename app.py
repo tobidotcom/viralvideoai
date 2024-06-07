@@ -39,13 +39,13 @@ def main():
             audio_response = client.audio.speech.create(
                 model="tts-1",
                 voice="alloy",
-                input=script  # Pass the text as 'input' instead of 'text'
+                input=script
             )
 
             # Save the audio file
             audio_file = Path("script_audio.mp3")
             with open(audio_file, "wb") as f:
-                f.write(audio_response.data)
+                f.write(audio_response.content)  # Use audio_response.content instead of audio_response.data
 
         # Update the progress bar
         progress_bar.progress(50)
