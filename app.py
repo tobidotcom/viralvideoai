@@ -1,3 +1,4 @@
+import streamlit as st
 import openai
 import moviepy.editor as mp
 import io
@@ -95,3 +96,4 @@ if video_idea:
 
     # Display video
     st.video(video_bytes)
+
