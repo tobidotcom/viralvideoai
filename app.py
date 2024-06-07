@@ -42,18 +42,22 @@ def main():
         # Add a placeholder for the progress bar
         progress_bar = st.progress(0)
 
-        # Generate viral video script using OpenAI Chat Completions API
-        with st.spinner('Generating script...'):
-            messages = [
-                {"role": "system", "content": "You are an AI assistant that generates viral video scripts."},
-                {"role": "user", "content": f"Generate a viral video script about {video_idea}"}
+  
+            # Generate captivating spoken stories using OpenAI Chat Completions API
+            with st.spinner('Weaving your tale...'):
+                messages = [
+                    {"role": "system", "content": "You are an AI assistant that crafts amazing and captivating stories for spoken word performances. Your stories should be rich in imagery, emotion, and depth, with relatable characters and a compelling arc that can deeply engage an audience."},
+                    {"role": "user", "content": f"Create an amazing story that touches the heart, with vivid descriptions and a powerful message, about {story_idea}"}
+                ]
             ]
-            response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                                      messages=messages,
-                                                      max_tokens=500,
-                                                      n=1,
-                                                      stop=None,
-                                                      temperature=0.7)
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                max_tokens=500,
+                n=1,
+                stop=None,
+                temperature=0.7
+            )
             script = response.choices[0].message.content
 
         # Update the progress bar
@@ -78,15 +82,17 @@ def main():
         # Generate image prompts from the script using OpenAI Chat Completions API
         with st.spinner('Generating image prompts...'):
             messages = [
-                {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
-                {"role": "user", "content": f"Here is the script: {script}. Please generate at least 5 image prompts for this viral video, each describing a specific scene or moment from the script, in the {style_description} style. For example, if the style is 'Vintage', the visuals should have a warm sepia tone, aged textures, and a nostalgic feel reminiscent of old films."}
+                {"role": "system", "content": "You are an AI assistant that generates high-quality, consistent image prompts for a viral video."},
+                {"role": "user", "content": f"The video script is as follows: {script}. Based on this script, create 20 detailed image prompts that capture the essence of the video's narrative. Each prompt should be in the '{selected_style}' style, which is characterized by {style_description}. The image prompts should be cohesive and maintain a consistent visual theme throughout, ensuring that the final video has a unified and professional look."}
             ]
-            response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                                      messages=messages,
-                                                      max_tokens=500,
-                                                      n=1,
-                                                      stop=None,
-                                                      temperature=0.7)
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                max_tokens=500,
+                n=1,
+                stop=None,
+                temperature=0.7
+            )
             image_prompts = [prompt.strip() for prompt in response.choices[0].message.content.split("\n") if prompt.strip()]
 
         # Update the progress bar
@@ -97,7 +103,7 @@ def main():
             images = []
             for prompt in image_prompts:
                 output = replicate.run(
-                    "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf",
+                    "stability-ai/stable-diffusion",
                     input={"prompt": prompt}
                 )
                 image_url = output[0]
