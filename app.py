@@ -6,6 +6,7 @@ from urllib.request import urlopen
 from io import BytesIO
 from PIL import Image
 import numpy as np
+import time
 
 # Set up OpenAI API credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -74,7 +75,11 @@ def main():
         # Generate images using OpenAI DALL-E API
         with st.spinner('Generating images...'):
             images = []
-            for prompt in image_prompts:
+            for i, prompt in enumerate(image_prompts):
+                # Introduce a delay to avoid rate limiting
+                if i > 0 and i % 5 == 0:
+                    time.sleep(60)  # Wait for 1 minute
+
                 response = client.images.generate(prompt=prompt,
                                                   n=1,
                                                   size="1024x1024")
@@ -90,8 +95,6 @@ def main():
         clips = [mp.ImageClip(image).set_duration(2) for image in images]
         final_clip = mp.concatenate_videoclips(clips)
         final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
-
-        # Set the fps attribute on the final VideoClip object
         final_clip.fps = 24
 
         # Save the video to an MP4 file
