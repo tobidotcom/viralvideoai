@@ -49,7 +49,7 @@ def main():
                 {"role": "user", "content": f"Create an amazing story that touches the heart, with vivid descriptions and a powerful message, about {video_idea}"}
             ]
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-3.5-turbo",
                 messages=messages,
                 max_tokens=500,
                 n=1,
@@ -84,7 +84,7 @@ def main():
                 {"role": "user", "content": f"The video script is as follows: {script}. Based on this script, create 20 detailed image prompts that capture the essence of the video's narrative. Each prompt should be in the '{selected_style}' style, which is characterized by {style_description}. The image prompts should be cohesive and maintain a consistent visual theme throughout, ensuring that the final video has a unified and professional look."}
             ]
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-3.5-turbo",
                 messages=messages,
                 max_tokens=500,
                 n=1,
@@ -96,18 +96,18 @@ def main():
         # Update the progress bar
         progress_bar.progress(75)
 
-       def generate_images(image_prompts):
-    images = []
-    for prompt in image_prompts:
-        output = replicate.run(
-            "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
-            input={"prompt": prompt}
-        )
-        image_url = output[0]
-        image_data = urlopen(image_url).read()
-        image = Image.open(BytesIO(image_data))
-        images.append(np.array(image))
-    return images
+        # Generate images using Replicate's SDXL-Lightning API
+        with st.spinner('Generating images...'):
+            images = []
+            for prompt in image_prompts:
+                output = replicate.run(
+                    "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
+                    input={"prompt": prompt}
+                )
+                image_url = output[0]
+                image_data = urlopen(image_url).read()
+                image = Image.open(BytesIO(image_data))
+                images.append(np.array(image))
 
         # Update the progress bar to 100%
         progress_bar.progress(100)
