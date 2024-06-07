@@ -3,6 +3,9 @@ import openai
 from pathlib import Path
 import moviepy.editor as mp
 from urllib.request import urlopen
+from io import BytesIO
+from PIL import Image
+import numpy as np
 
 # Set up OpenAI API credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -76,13 +79,15 @@ def main():
                                                   n=1,
                                                   size="1024x1024")
                 image_url = response.data[0].url
-                images.append(image_url)
+                image_data = urlopen(image_url).read()
+                image = Image.open(BytesIO(image_data))
+                images.append(np.array(image))
 
         # Update the progress bar to 100%
         progress_bar.progress(100)
 
         # Create video from images and audio
-        clips = [mp.ImageClip(urlopen(image_url)).set_duration(2) for image_url in images]
+        clips = [mp.ImageClip(image).set_duration(2) for image in images]
         final_clip = mp.concatenate_videoclips(clips)
         final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
 
