@@ -12,11 +12,27 @@ import time
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 client = openai.Client()
 
+# Define video styles
+video_styles = {
+    "Realistic": "photorealistic, highly detailed, natural lighting, true-to-life textures",
+    "Cartoon": "cartoon style, vibrant and saturated colors, exaggerated features, flat shading, bold outlines",
+    "Vintage": "vintage aesthetic, warm sepia or desaturated tones, aged textures, film grain, nostalgic feel",
+    "Minimalist": "minimalist design, flat colors, simple shapes, clean lines, negative space",
+    "Cyberpunk": "cyberpunk aesthetic, neon lights, futuristic technology, gritty urban environments, high contrast",
+    "Surreal": "surreal and dreamlike, distorted reality, impossible scenarios, melting objects, mind-bending visuals",
+    "Steampunk": "steampunk style, Victorian-era inspired, brass and wood textures, intricate machinery, retro-futuristic",
+    "Vaporwave": "vaporwave aesthetic, glitch art, retro color palettes, Japanese influences, nostalgic and futuristic"
+}
+
 def main():
     st.title("Viral Video Generator")
 
     # Get user input for the video idea
     video_idea = st.text_input("Enter your video idea:")
+
+    # Select video style
+    selected_style = st.selectbox("Choose a Video Style", list(video_styles.keys()))
+    style_description = video_styles[selected_style]
 
     if st.button("Generate Viral Video"):
         # Add a placeholder for the progress bar
@@ -59,7 +75,7 @@ def main():
         with st.spinner('Generating image prompts...'):
             messages = [
                 {"role": "system", "content": "You are an AI assistant that generates image prompts for a viral video based on a given script."},
-                {"role": "user", "content": f"Here is the script: {script}. Please generate at least 5 image prompts for this viral video, each describing a specific scene or moment from the script."}
+                {"role": "user", "content": f"Here is the script: {script}. Please generate at least 5 image prompts for this viral video, each describing a specific scene or moment from the script, in the {style_description} style. For example, if the style is 'Vintage', the visuals should have a warm sepia tone, aged textures, and a nostalgic feel reminiscent of old films."}
             ]
             response = client.chat.completions.create(model="gpt-3.5-turbo",
                                                       messages=messages,
