@@ -89,7 +89,7 @@ def main():
         # Create video from images and audio
         clips = [mp.ImageClip(image).set_duration(2) for image in images]
         final_clip = mp.concatenate_videoclips(clips)
-        final_clip = final_clip.set_audio(mp.AudioFileClip(audio_file))
+        final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
 
         # Save the video to an MP4 file
         final_clip.write_videofile("viral_video.mp4", codec="libx264")
