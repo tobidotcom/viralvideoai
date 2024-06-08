@@ -4,9 +4,8 @@ import openai
 from pathlib import Path
 import moviepy.editor as mp
 from urllib.request import urlopen
-from io import BytesIO
+from io import BytesIO, io
 from PIL import Image
-import numpy as np
 import replicate
 
 def generate_video(prompts, num_frames=1200, enhance=True, image_guidance=3.0, model_type="text-to-video"):
@@ -26,7 +25,7 @@ def generate_video(prompts, num_frames=1200, enhance=True, image_guidance=3.0, m
             )
 
             video_urls.extend(output)
-    else:  # text-to-image
+    elif model_type == "text-to-image":
         for prompt in prompts:
             output = replicate.run(
                 "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
@@ -169,7 +168,7 @@ def main():
 
         # Generate video using the selected Replicate model
         with st.spinner('Generating video...'):
-            video_urls = generate_video(image_prompts, num_frames=1200, enhance=True, image_guidance=3.0, model_type=model_type.lower().replace("-", ""))
+            video_urls = generate_video(image_prompts, num_frames=1200, enhance=True, image_guidance=3.0, model_type=model_type.lower())
 
         # Update the progress bar to 100%
         progress_bar.progress(100)
@@ -178,17 +177,18 @@ def main():
             clips = []
             for url in video_urls:
                 video_data = urlopen(url).read()
-                clip = mp.VideoFileClip(BytesIO(video_data))
-                clips.append(clip)
+                with io.BytesIO(video_data) as video_buffer:
+                    clip = mp.VideoFileClip(video_buffer)
+                    clips.append(clip)
 
             final_clip = mp.concatenate_videoclips(clips)
             final_clip = final_clip.set_audio(mp.AudioFileClip(str(audio_file)))
             final_clip.fps = 24
 
-            video_file = Path("viral_video.mp4")
-            final_clip.write_videofile(str(video_file), codec="libx264")
+            video_file = "viral_video.mp4"
+            final_clip.write_videofile(video_file, codec="libx264")
 
-            with video_file.open("rb") as f:
+            with open(video_file, "rb") as f:
                 video_bytes = f.read()
 
             st.video(video_bytes)
@@ -209,4 +209,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
