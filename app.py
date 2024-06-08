@@ -4,7 +4,7 @@ import openai
 from pathlib import Path
 import moviepy.editor as mp
 from urllib.request import urlopen
-from io import BytesIO, io
+from io import BytesIO
 from PIL import Image
 import replicate
 
@@ -177,7 +177,7 @@ def main():
             clips = []
             for url in video_urls:
                 video_data = urlopen(url).read()
-                with io.BytesIO(video_data) as video_buffer:
+                with BytesIO(video_data) as video_buffer:
                     clip = mp.VideoFileClip(video_buffer)
                     clips.append(clip)
 
